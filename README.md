@@ -1,5 +1,5 @@
 # krunner-markdown-bookmarks
-A Krunner plugin to open web links listed in a Markdown file
+A KRunner plugin for opening web links listed in a Markdown file
 
 ## Installation
 - [Arch Linux AUR](https://aur.archlinux.org/packages/plasma6-runners-markdown-bookmarks)
