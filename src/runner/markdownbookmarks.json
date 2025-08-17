@@ -1,0 +1,18 @@
+{
+    "$schema": "https://autoconfig.kde.org/jsonschemas/krunner.schema.json",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "ar@nullsum.net",
+                "Name": "Andrew Rabert"
+            }
+        ],
+        "Description": "Open web links listed in a Markdown file",
+        "EnabledByDefault": true,
+        "Icon": "bookmarks",
+        "License": "GPL-3.0",
+        "Name": "Markdown Bookmarks"
+    },
+    "X-Plasma-Runner-Min-Letter-Count": 2,
+    "X-KDE-ConfigModule": "kcm_krunner_markdownbookmarks"
+}
