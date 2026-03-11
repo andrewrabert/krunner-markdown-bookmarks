@@ -7,7 +7,7 @@
                 "Name": "Andrew Rabert"
             }
         ],
-        "Description": "Open web links listed in a Markdown file",
+        "Description": "Open web links and search engines from Markdown files",
         "EnabledByDefault": true,
         "Icon": "bookmarks",
         "License": "GPL-3.0",

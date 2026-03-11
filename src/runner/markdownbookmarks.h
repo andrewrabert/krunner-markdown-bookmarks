@@ -3,6 +3,7 @@
 
 #include "core/Bookmark.h"
 #include "core/FaviconCache.h"
+#include "core/SearchEngine.h"
 #include <KRunner/AbstractRunner>
 #include <KRunner/Action>
 #include <KServiceAction>
@@ -17,11 +18,16 @@ public:
 
     const QRegularExpression prefixRegex{QStringLiteral(R"(^bookmark(?: +(.*))?$)")};
     QList<Bookmark> bookmarks;
+    QList<SearchEngine> searchEngines;
+    QHash<QString, int> searchEngineKeywordIndex;
     QFileSystemWatcher watcher;
     FaviconCache faviconCache;
     QHash<QString, QIcon> faviconsByUrl;
+    FaviconCache searchEngineFaviconCache;
+    QHash<QString, QIcon> searchEngineFaviconsByUrl;
 
     KRunner::QueryMatch createQueryMatch(const Bookmark &bookmark, qreal relevance);
+    KRunner::QueryMatch createSearchEngineMatch(const SearchEngine &engine, const QString &searchQuery);
 
 public: // Plasma::AbstractRunner API
     void reloadConfiguration() override;

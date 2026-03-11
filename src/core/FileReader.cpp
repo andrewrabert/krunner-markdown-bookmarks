@@ -16,7 +16,7 @@ QList<Bookmark> FileReader::getBookmarks() const
 {
     // Only read custom bookmarks using configurable path
     QFile customBookmarks(Config::bookmarkFilePath(configGroup));
-    if (customBookmarks.exists() && customBookmarks.open(QFile::ReadOnly)) {
+    if (customBookmarks.open(QFile::ReadOnly)) {
         return parseMarkdownFile(customBookmarks);
     }
 

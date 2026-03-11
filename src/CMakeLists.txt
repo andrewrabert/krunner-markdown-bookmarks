@@ -1,6 +1,6 @@
 set(CMAKE_AUTOUIC ON)
 
-kcoreaddons_add_plugin(markdownbookmarks SOURCES runner/markdownbookmarks.cpp core/Bookmark.cpp core/FileReader.cpp core/FaviconCache.cpp INSTALL_NAMESPACE "kf6/krunner")
+kcoreaddons_add_plugin(markdownbookmarks SOURCES runner/markdownbookmarks.cpp core/Bookmark.cpp core/FileReader.cpp core/FaviconCache.cpp core/SearchEngine.cpp core/SearchEngineReader.cpp INSTALL_NAMESPACE "kf6/krunner")
 target_link_libraries(markdownbookmarks
     KF6::Runner
     KF6::ConfigCore
@@ -15,6 +15,8 @@ target_sources(kcm_krunner_markdownbookmarks PRIVATE
     config/markdownbookmarks_config.cpp
     core/Bookmark.cpp
     core/FileReader.cpp
+    core/SearchEngine.cpp
+    core/SearchEngineReader.cpp
 )
 target_link_libraries(kcm_krunner_markdownbookmarks
     Qt::Core

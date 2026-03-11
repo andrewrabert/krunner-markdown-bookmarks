@@ -15,6 +15,9 @@ struct Config {
     constexpr static const auto MarkdownFilePath = "MarkdownFilePath";
     constexpr static const auto FetchFavicons = "FetchFavicons";
     constexpr static const auto FaviconCachePath = "FaviconCachePath";
+    constexpr static const auto SearchEnginesFilePath = "SearchEnginesFilePath";
+    constexpr static const auto FetchSearchEngineFavicons = "FetchSearchEngineFavicons";
+    constexpr static const auto SearchEngineFaviconCachePath = "SearchEngineFaviconCachePath";
 
     static inline QString bookmarkFilePath()
     {
@@ -33,6 +36,16 @@ struct Config {
     static inline QString faviconCachePath(const KConfigGroup &config)
     {
         return config.readEntry(FaviconCachePath, QString());
+    }
+
+    static inline QString searchEnginesFilePath(const KConfigGroup &config)
+    {
+        return config.readEntry(SearchEnginesFilePath, QString());
+    }
+
+    static inline QString searchEngineFaviconCachePath(const KConfigGroup &config)
+    {
+        return config.readEntry(SearchEngineFaviconCachePath, QString());
     }
 };
 

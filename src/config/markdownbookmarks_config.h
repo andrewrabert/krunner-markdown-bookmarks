@@ -4,7 +4,6 @@
 #include "ui_markdownbookmarks_config.h"
 #include <KCModule>
 #include <KConfigGroup>
-#include <core/Bookmark.h>
 
 class MarkdownBookmarksConfigForm : public QWidget, public Ui::MarkdownBookmarksConfigUi
 {
@@ -21,10 +20,6 @@ class MarkdownBookmarksConfig : public KCModule
 private:
     MarkdownBookmarksConfigForm *m_ui;
     KConfigGroup config;
-    bool customEntriesExist = false;
-    bool customFilterWasChecked = false;
-
-    QList<Bookmark> bookmarks;
 
 public:
     explicit MarkdownBookmarksConfig(QObject *parent, const QVariantList &args);
@@ -43,7 +38,15 @@ public Q_SLOTS:
 
     void browseMarkdownFile();
 
+    void browseSearchEnginesFile();
+
     void browseFaviconCacheDir();
+
+    void browseSearchEngineFaviconCacheDir();
+
+private:
+    void browseForFile(QLineEdit *lineEdit, const QString &dialogTitle);
+    void browseForDir(QLineEdit *lineEdit, const QString &dialogTitle);
 };
 
 #endif

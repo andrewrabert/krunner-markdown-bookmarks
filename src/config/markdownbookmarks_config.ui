@@ -38,9 +38,28 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="searchEnginesGroupBox">
+     <property name="title">
+      <string>Search Engines File</string>
+     </property>
+     <layout class="QHBoxLayout" name="searchEnginesFilePathLayout">
+      <item>
+       <widget class="QLineEdit" name="searchEnginesFilePathEdit"></widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="browseSearchEnginesButton">
+        <property name="text">
+         <string>Browse...</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QGroupBox" name="faviconsGroupBox">
      <property name="title">
-      <string>Favicons</string>
+      <string>Bookmark Favicons</string>
      </property>
      <layout class="QVBoxLayout" name="faviconsLayout">
       <item>
@@ -68,6 +87,47 @@
         </item>
         <item>
          <widget class="QPushButton" name="browseFaviconCacheButton">
+          <property name="text">
+           <string>Browse...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="searchEngineFaviconsGroupBox">
+     <property name="title">
+      <string>Search Engine Favicons</string>
+     </property>
+     <layout class="QVBoxLayout" name="searchEngineFaviconsLayout">
+      <item>
+       <widget class="QCheckBox" name="fetchSearchEngineFaviconsCheckBox">
+        <property name="text">
+         <string>Fetch favicons for search engines</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="searchEngineFaviconCachePathLayout">
+        <item>
+         <widget class="QLabel" name="searchEngineFaviconCachePathLabel">
+          <property name="text">
+           <string>Icon directory:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="searchEngineFaviconCachePathEdit">
+          <property name="placeholderText">
+           <string>No directory set — favicons disabled</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="browseSearchEngineFaviconCacheButton">
           <property name="text">
            <string>Browse...</string>
           </property>
