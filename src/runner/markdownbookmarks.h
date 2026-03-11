@@ -2,6 +2,7 @@
 #define MARKDOWNBOOKMARKS_H
 
 #include "core/Bookmark.h"
+#include "core/FaviconCache.h"
 #include <KRunner/AbstractRunner>
 #include <KRunner/Action>
 #include <KServiceAction>
@@ -17,6 +18,8 @@ public:
     const QRegularExpression prefixRegex{QStringLiteral(R"(^bookmark(?: +(.*))?$)")};
     QList<Bookmark> bookmarks;
     QFileSystemWatcher watcher;
+    FaviconCache faviconCache;
+    QHash<QString, QIcon> faviconsByUrl;
 
     KRunner::QueryMatch createQueryMatch(const Bookmark &bookmark, qreal relevance);
 

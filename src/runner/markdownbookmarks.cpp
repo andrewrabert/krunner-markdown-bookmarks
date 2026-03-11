@@ -16,6 +16,7 @@
 MarkdownBookmarks::MarkdownBookmarks(QObject *parent, const KPluginMetaData &pluginMetaData, const QVariantList &args)
     : KRunner::AbstractRunner(parent, pluginMetaData)
     , watcher(this)
+    , faviconCache(this)
 {
     Q_UNUSED(args)
     // Add file watcher for config (using default path initially)
@@ -24,6 +25,13 @@ MarkdownBookmarks::MarkdownBookmarks(QObject *parent, const KPluginMetaData &plu
         watcher.addPath(path);
         reloadConfiguration();
     });
+    connect(&faviconCache, &FaviconCache::iconsReady, this, [this](const QHash<QString, QIcon> &icons) {
+        faviconsByUrl = icons;
+    });
+
+    QList<KRunner::RunnerSyntax> syntaxes;
+    syntaxes.append(KRunner::RunnerSyntax(QStringLiteral("bookmark :q:"), QStringLiteral("Searches for Markdown bookmarks matching the query.")));
+    setSyntaxes(syntaxes);
 }
 
 MarkdownBookmarks::~MarkdownBookmarks()
@@ -46,11 +54,24 @@ void MarkdownBookmarks::reloadConfiguration()
         watcher.addPath(newPath);
     }
 
+    const QString cachePath = Config::faviconCachePath(grp);
+    const bool fetchEnabled = grp.readEntry(Config::FetchFavicons, false);
 
+    QStringList urls;
+    if (!cachePath.isEmpty()) {
+        urls.reserve(bookmarks.size());
+        for (const auto &b : std::as_const(bookmarks)) {
+            urls.append(b.url);
+        }
+    }
 
-    QList<KRunner::RunnerSyntax> syntaxes;
-    syntaxes.append(KRunner::RunnerSyntax(QStringLiteral("bookmark :q:"), QStringLiteral("Searches for Markdown bookmarks matching the query.")));
-    setSyntaxes(syntaxes);
+    // Invoke on FaviconCache's thread (owns QNetworkAccessManager)
+    QMetaObject::invokeMethod(&faviconCache,
+                              "loadAndFetch",
+                              Qt::QueuedConnection,
+                              Q_ARG(QString, cachePath),
+                              Q_ARG(QStringList, urls),
+                              Q_ARG(bool, fetchEnabled));
 }
 
 void MarkdownBookmarks::match(KRunner::RunnerContext &context)
@@ -92,6 +113,12 @@ KRunner::QueryMatch MarkdownBookmarks::createQueryMatch(const Bookmark &bookmark
     // match.setSubtext(bookmark.url);
     match.setData(bookmark.url);
     match.setRelevance(relevance);
+
+    const auto it = faviconsByUrl.constFind(bookmark.url);
+    if (it != faviconsByUrl.constEnd()) {
+        match.setIcon(it.value());
+    }
+
     return match;
 }
 

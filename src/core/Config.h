@@ -13,6 +13,8 @@ struct Config {
     constexpr static const auto RootGroup = "Config";
     constexpr static const auto SearchByDescription = "searchByDescription";
     constexpr static const auto MarkdownFilePath = "MarkdownFilePath";
+    constexpr static const auto FetchFavicons = "FetchFavicons";
+    constexpr static const auto FaviconCachePath = "FaviconCachePath";
 
     static inline QString bookmarkFilePath()
     {
@@ -26,6 +28,11 @@ struct Config {
             return customPath;
         }
         return bookmarkFilePath();
+    }
+
+    static inline QString faviconCachePath(const KConfigGroup &config)
+    {
+        return config.readEntry(FaviconCachePath, QString());
     }
 };
 

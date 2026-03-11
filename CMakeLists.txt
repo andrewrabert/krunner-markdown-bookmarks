@@ -20,7 +20,7 @@ include(FeatureSummary)
 include(ECMDeprecationSettings)
 
 # Find the required Libaries
-find_package(Qt6 ${QT_MIN_VERSION} REQUIRED CONFIG COMPONENTS Widgets Core DBus)
+find_package(Qt6 ${QT_MIN_VERSION} REQUIRED CONFIG COMPONENTS Widgets Core DBus Network)
 find_package(KF6 ${KF_MIN_VERSION} REQUIRED COMPONENTS Runner KCMUtils KIO)
 
 ecm_set_disabled_deprecation_versions(

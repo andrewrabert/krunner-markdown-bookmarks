@@ -39,15 +39,11 @@ public Q_SLOTS:
 
     void defaults() override;
 
-    /**
-     * Connect all the signals and slots
-     */
     void connectSignals();
 
-    /**
-     * Open file dialog to browse for Markdown files
-     */
     void browseMarkdownFile();
+
+    void browseFaviconCacheDir();
 };
 
 #endif

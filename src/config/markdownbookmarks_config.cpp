@@ -3,6 +3,7 @@
 #include "utilities.h"
 #include <KPluginFactory>
 #include <KSharedConfig>
+#include <QDir>
 #include <QFileDialog>
 #include <core/Config.h>
 #include <core/FileReader.h>
@@ -38,14 +39,17 @@ MarkdownBookmarksConfig::~MarkdownBookmarksConfig()
 void MarkdownBookmarksConfig::load()
 {
     m_ui->markdownFilePathEdit->setText(config.readEntry(Config::MarkdownFilePath, QString()));
+    m_ui->fetchFaviconsCheckBox->setChecked(config.readEntry(Config::FetchFavicons, false));
+    m_ui->faviconCachePathEdit->setText(config.readEntry(Config::FaviconCachePath, QString()));
     connectSignals();
     markAsChanged();
 }
 
 void MarkdownBookmarksConfig::save()
 {
-    // Save general settings
     config.writeEntry(Config::MarkdownFilePath, m_ui->markdownFilePathEdit->text());
+    config.writeEntry(Config::FetchFavicons, m_ui->fetchFaviconsCheckBox->isChecked());
+    config.writeEntry(Config::FaviconCachePath, m_ui->faviconCachePathEdit->text());
 
     config.sync();
     config.config()->sync();
@@ -54,15 +58,16 @@ void MarkdownBookmarksConfig::save()
 void MarkdownBookmarksConfig::defaults()
 {
     m_ui->markdownFilePathEdit->clear();
+    m_ui->fetchFaviconsCheckBox->setChecked(false);
+    m_ui->faviconCachePathEdit->clear();
 
     markAsChanged();
 }
 
 void MarkdownBookmarksConfig::connectSignals()
 {
-    // Connect slots for filters
-    // Browse button for custom file path
     connect(m_ui->browseFileButton, &QPushButton::clicked, this, &MarkdownBookmarksConfig::browseMarkdownFile);
+    connect(m_ui->browseFaviconCacheButton, &QPushButton::clicked, this, &MarkdownBookmarksConfig::browseFaviconCacheDir);
 }
 
 void MarkdownBookmarksConfig::browseMarkdownFile()
@@ -79,5 +84,17 @@ void MarkdownBookmarksConfig::browseMarkdownFile()
     }
 }
 
+void MarkdownBookmarksConfig::browseFaviconCacheDir()
+{
+    const QString currentPath = m_ui->faviconCachePathEdit->text();
+    const QString startPath = currentPath.isEmpty() ? QDir::homePath() : currentPath;
+
+    const QString dirName = QFileDialog::getExistingDirectory(widget(), QStringLiteral("Select Icon Directory"), startPath);
+
+    if (!dirName.isEmpty()) {
+        m_ui->faviconCachePathEdit->setText(dirName);
+        markAsChanged();
+    }
+}
 
 #include "markdownbookmarks_config.moc"

@@ -37,6 +37,47 @@
      </layout>
     </widget>
    </item>
+   <item>
+    <widget class="QGroupBox" name="faviconsGroupBox">
+     <property name="title">
+      <string>Favicons</string>
+     </property>
+     <layout class="QVBoxLayout" name="faviconsLayout">
+      <item>
+       <widget class="QCheckBox" name="fetchFaviconsCheckBox">
+        <property name="text">
+         <string>Fetch favicons for bookmarks</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="faviconCachePathLayout">
+        <item>
+         <widget class="QLabel" name="faviconCachePathLabel">
+          <property name="text">
+           <string>Icon directory:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="faviconCachePathEdit">
+          <property name="placeholderText">
+           <string>No directory set — favicons disabled</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="browseFaviconCacheButton">
+          <property name="text">
+           <string>Browse...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
   </layout>
  </widget>
  <resources/>
