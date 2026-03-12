@@ -1,0 +1,19 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          tag_msg=$(git tag -l --format='%(contents)' "$GITHUB_REF_NAME")
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes "$tag_msg"
+        env:
+          GH_TOKEN: ${{ github.token }}
