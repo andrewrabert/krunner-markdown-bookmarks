@@ -3,11 +3,11 @@
 
 #include "core/Bookmark.h"
 #include "core/FaviconCache.h"
+#include "core/FileWatcher.h"
 #include "core/SearchEngine.h"
 #include <KRunner/AbstractRunner>
 #include <KRunner/Action>
 #include <KServiceAction>
-#include <QFileSystemWatcher>
 
 class MarkdownBookmarks : public KRunner::AbstractRunner
 {
@@ -20,7 +20,8 @@ public:
     QList<Bookmark> bookmarks;
     QList<SearchEngine> searchEngines;
     QHash<QString, int> searchEngineKeywordIndex;
-    QFileSystemWatcher watcher;
+    FileWatcher *watcher;
+    QStringList watchedConfigFiles;
     FaviconCache faviconCache;
     QHash<QString, QIcon> faviconsByUrl;
     FaviconCache searchEngineFaviconCache;

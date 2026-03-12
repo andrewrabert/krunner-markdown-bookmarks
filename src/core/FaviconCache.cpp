@@ -1,18 +1,30 @@
 #include "FaviconCache.h"
+#include "FileWatcher.h"
 
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QImage>
 #include <QNetworkReply>
 #include <QUrl>
 
-FaviconCache::FaviconCache(QObject *parent)
+FaviconCache::FaviconCache(FileWatcher *watcher, QObject *parent)
     : QObject(parent)
     , m_nam(new QNetworkAccessManager(this))
+    , m_watcher(watcher)
 {
-    connect(&m_dirWatcher, &QFileSystemWatcher::directoryChanged, this, [this]() {
-        m_iconCache.clear();
-        resolveAndEmit();
+    connect(m_watcher, &FileWatcher::fileChanged, this, [this](const QString &path) {
+        const QString filename = QFileInfo(path).completeBaseName();
+        if (m_iconCache.remove(filename)) {
+            resolveAndEmit();
+        }
+    });
+    connect(m_watcher, &FileWatcher::dirChanged, this, [this](const QString &path) {
+        if (path == m_cacheDir) {
+            clearFileWatches();
+            m_iconCache.clear();
+            resolveAndEmit();
+        }
     });
 }
 
@@ -20,8 +32,17 @@ void FaviconCache::setCacheDir(const QString &dir)
 {
     if (dir == m_cacheDir)
         return;
+    clearFileWatches();
     m_cacheDir = dir;
     m_iconCache.clear();
+}
+
+void FaviconCache::clearFileWatches()
+{
+    for (const QString &f : std::as_const(m_watchedFiles)) {
+        m_watcher->removeFile(f);
+    }
+    m_watchedFiles.clear();
 }
 
 QString FaviconCache::cacheFilePath(const QString &domain) const
@@ -62,9 +83,12 @@ QIcon FaviconCache::iconForUrl(const QString &url) const
     if (it != m_iconCache.constEnd())
         return it.value();
 
-    const QIcon icon(cacheFilePath(domain));
+    const QString path = cacheFilePath(domain);
+    const QIcon icon(path);
     if (!icon.isNull() && !icon.availableSizes().isEmpty()) {
         m_iconCache.insert(domain, icon);
+        m_watcher->addFile(path);
+        m_watchedFiles.insert(path);
         return icon;
     }
 
@@ -73,18 +97,17 @@ QIcon FaviconCache::iconForUrl(const QString &url) const
 
 void FaviconCache::loadAndFetch(const QString &cachePath, const QStringList &urls, bool fetchEnabled)
 {
-    const bool pathChanged = (cachePath != m_cacheDir);
+    const QString oldDir = m_cacheDir;
     setCacheDir(cachePath);
     m_urls = urls;
 
-    // Watch the cache directory for manually added icons
-    if (pathChanged) {
-        if (!m_dirWatcher.directories().isEmpty()) {
-            m_dirWatcher.removePaths(m_dirWatcher.directories());
+    if (m_cacheDir != oldDir) {
+        if (!oldDir.isEmpty()) {
+            m_watcher->removeDir(oldDir);
         }
         if (!m_cacheDir.isEmpty()) {
             QDir().mkpath(m_cacheDir);
-            m_dirWatcher.addPath(m_cacheDir);
+            m_watcher->addDir(m_cacheDir);
         }
     }
 

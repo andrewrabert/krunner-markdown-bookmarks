@@ -11,20 +11,23 @@
 #include <QDBusInterface>
 #include <QDBusReply>
 #include <QFile>
-#include <QTimer>
+#include <QLoggingCategory>
 #include <QUrl>
+
+Q_LOGGING_CATEGORY(LOG_BOOKMARKS, "krunner.markdownbookmarks")
 
 MarkdownBookmarks::MarkdownBookmarks(QObject *parent, const KPluginMetaData &pluginMetaData, const QVariantList &args)
     : KRunner::AbstractRunner(parent, pluginMetaData)
-    , watcher(this)
-    , faviconCache(this)
-    , searchEngineFaviconCache(this)
+    , watcher(new FileWatcher())
+    , faviconCache(watcher, this)
+    , searchEngineFaviconCache(watcher, this)
 {
     Q_UNUSED(args)
-    // Add file watcher for config (using default path initially)
-    watcher.addPath(Config::bookmarkFilePath());
-    connect(&watcher, &QFileSystemWatcher::fileChanged, this, [this](const QString &path) {
-        watcher.addPath(path);
+
+    connect(watcher, &FileWatcher::fileChanged, this, [this](const QString &path) {
+        if (!watchedConfigFiles.contains(path))
+            return;
+        qCInfo(LOG_BOOKMARKS) << "File changed, reloading:" << path;
         reloadConfiguration();
     });
     connect(&faviconCache, &FaviconCache::iconsReady, this, [this](const QHash<QString, QIcon> &icons) {
@@ -42,6 +45,7 @@ MarkdownBookmarks::MarkdownBookmarks(QObject *parent, const KPluginMetaData &plu
 
 MarkdownBookmarks::~MarkdownBookmarks()
 {
+    delete watcher;
 }
 
 void MarkdownBookmarks::reloadConfiguration()
@@ -60,19 +64,18 @@ void MarkdownBookmarks::reloadConfiguration()
         }
     }
 
-    // Update file watcher to use configured paths
-    const QStringList watchedFiles = watcher.files();
-    if (!watchedFiles.isEmpty()) {
-        watcher.removePaths(watchedFiles);
-    }
+    // Update file watches for bookmark and search engine files
     const QString bookmarkPath = Config::bookmarkFilePath(grp);
-    if (!bookmarkPath.isEmpty()) {
-        watcher.addPath(bookmarkPath);
-    }
-    const QString searchEnginesPath = Config::searchEnginesFilePath(grp);
-    if (!searchEnginesPath.isEmpty()) {
-        watcher.addPath(searchEnginesPath);
-    }
+    const QString searchEnginePath = Config::searchEnginesFilePath(grp);
+
+    watchedConfigFiles.clear();
+    if (!bookmarkPath.isEmpty())
+        watchedConfigFiles.append(bookmarkPath);
+    if (!searchEnginePath.isEmpty())
+        watchedConfigFiles.append(searchEnginePath);
+
+    watcher->addFile(bookmarkPath);
+    watcher->addFile(searchEnginePath);
 
     // Bookmark favicons
     const QString cachePath = Config::faviconCachePath(grp);

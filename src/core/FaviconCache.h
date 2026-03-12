@@ -1,17 +1,19 @@
 #pragma once
 
-#include <QFileSystemWatcher>
 #include <QHash>
 #include <QIcon>
 #include <QNetworkAccessManager>
 #include <QObject>
+#include <QSet>
 #include <QString>
+
+class FileWatcher;
 
 class FaviconCache : public QObject
 {
     Q_OBJECT
 public:
-    explicit FaviconCache(QObject *parent = nullptr);
+    explicit FaviconCache(FileWatcher *watcher, QObject *parent = nullptr);
 
 Q_SIGNALS:
     void iconsReady(const QHash<QString, QIcon> &iconsByUrl);
@@ -26,6 +28,7 @@ private:
     };
 
     void setCacheDir(const QString &dir);
+    void clearFileWatches();
     void resolveAndEmit();
     QIcon iconForUrl(const QString &url) const;
     void fetchMissing();
@@ -36,9 +39,10 @@ private:
     static QString domainFromUrl(const QString &url);
 
     QNetworkAccessManager *m_nam;
-    QFileSystemWatcher m_dirWatcher;
+    FileWatcher *m_watcher;
     QStringList m_urls;
     mutable QHash<QString, QIcon> m_iconCache;
+    mutable QSet<QString> m_watchedFiles;
     QString m_cacheDir;
     static constexpr int ICON_SIZE = 32;
 };
