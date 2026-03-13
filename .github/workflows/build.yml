@@ -1,0 +1,21 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: pacman -Syu --noconfirm cmake extra-cmake-modules ninja qt6-base krunner kcmutils kio
+
+      - name: Build
+        run: |
+          cmake -B build -G Ninja -Wno-dev
+          cmake --build build
