@@ -17,3 +17,43 @@ jobs:
           gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes "$tag_msg"
         env:
           GH_TOKEN: ${{ github.token }}
+
+  aur:
+    runs-on: ubuntu-latest
+    needs: release
+    container: archlinux:base-devel
+    steps:
+      - name: Setup
+        run: |
+          pacman -Syu --noconfirm openssh git
+
+          mkdir -p ~/.ssh
+          echo "$AUR_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo "aur.archlinux.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEuBKrPzbawxA/k2g6NcyV5jmqwJ2s+zpgZGZ7tpLIcN" >> ~/.ssh/known_hosts
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+
+      - name: Update AUR package
+        run: |
+          git clone ssh://aur@aur.archlinux.org/plasma6-runners-markdown-bookmarks.git aur
+          cd aur
+
+          VERSION="${GITHUB_REF_NAME}"
+          SOURCE_URL="https://github.com/andrewrabert/krunner-markdown-bookmarks/archive/${VERSION}.tar.gz"
+          SHA256=$(curl -sL "$SOURCE_URL" | sha256sum | cut -d' ' -f1)
+
+          sed -i "s/^pkgver=.*/pkgver=${VERSION}/" PKGBUILD
+          sed -i "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
+          sed -i "s/^sha256sums=.*/sha256sums=('${SHA256}')/" PKGBUILD
+
+          # Run as non-root user (makepkg requirement)
+          useradd -m builder
+          chown -R builder:builder .
+          su builder -c 'makepkg --printsrcinfo > .SRCINFO'
+
+          git config user.name "Andrew Rabert"
+          git config user.email "ar@nullsum.net"
+          git add PKGBUILD .SRCINFO
+          git commit -m "Update to ${VERSION}"
+          git push
