@@ -35,6 +35,7 @@ void MarkdownBookmarksConfig::load()
 {
     m_ui->markdownFilePathEdit->setText(config.readEntry(Config::MarkdownFilePath, QString()));
     m_ui->searchEnginesFilePathEdit->setText(config.readEntry(Config::SearchEnginesFilePath, QString()));
+    m_ui->globalSearchEnginesEdit->setText(config.readEntry(Config::GlobalSearchEngines, QString()));
     m_ui->fetchFaviconsCheckBox->setChecked(config.readEntry(Config::FetchFavicons, false));
     m_ui->faviconCachePathEdit->setText(config.readEntry(Config::FaviconCachePath, QString()));
     m_ui->fetchSearchEngineFaviconsCheckBox->setChecked(config.readEntry(Config::FetchSearchEngineFavicons, false));
@@ -46,6 +47,7 @@ void MarkdownBookmarksConfig::save()
 {
     config.writeEntry(Config::MarkdownFilePath, m_ui->markdownFilePathEdit->text());
     config.writeEntry(Config::SearchEnginesFilePath, m_ui->searchEnginesFilePathEdit->text());
+    config.writeEntry(Config::GlobalSearchEngines, m_ui->globalSearchEnginesEdit->text());
     config.writeEntry(Config::FetchFavicons, m_ui->fetchFaviconsCheckBox->isChecked());
     config.writeEntry(Config::FaviconCachePath, m_ui->faviconCachePathEdit->text());
     config.writeEntry(Config::FetchSearchEngineFavicons, m_ui->fetchSearchEngineFaviconsCheckBox->isChecked());
@@ -58,6 +60,7 @@ void MarkdownBookmarksConfig::defaults()
 {
     m_ui->markdownFilePathEdit->clear();
     m_ui->searchEnginesFilePathEdit->clear();
+    m_ui->globalSearchEnginesEdit->clear();
     m_ui->fetchFaviconsCheckBox->setChecked(false);
     m_ui->faviconCachePathEdit->clear();
     m_ui->fetchSearchEngineFaviconsCheckBox->setChecked(false);

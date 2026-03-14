@@ -20,6 +20,7 @@ public:
     QList<Bookmark> bookmarks;
     QList<SearchEngine> searchEngines;
     QHash<QString, int> searchEngineKeywordIndex;
+    QList<int> globalSearchEngineIndices;
     FileWatcher *watcher;
     QStringList watchedConfigFiles;
     FaviconCache faviconCache;
@@ -28,7 +29,10 @@ public:
     QHash<QString, QIcon> searchEngineFaviconsByUrl;
 
     KRunner::QueryMatch createQueryMatch(const Bookmark &bookmark, qreal relevance);
-    KRunner::QueryMatch createSearchEngineMatch(const SearchEngine &engine, const QString &searchQuery);
+    KRunner::QueryMatch createSearchEngineMatch(const SearchEngine &engine,
+                                                const QString &searchQuery,
+                                                qreal relevance = 0.9,
+                                                KRunner::QueryMatch::CategoryRelevance categoryRelevance = KRunner::QueryMatch::CategoryRelevance::High);
 
 public: // Plasma::AbstractRunner API
     void reloadConfiguration() override;

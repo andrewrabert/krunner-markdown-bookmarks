@@ -18,6 +18,7 @@ struct Config {
     constexpr static const auto SearchEnginesFilePath = "SearchEnginesFilePath";
     constexpr static const auto FetchSearchEngineFavicons = "FetchSearchEngineFavicons";
     constexpr static const auto SearchEngineFaviconCachePath = "SearchEngineFaviconCachePath";
+    constexpr static const auto GlobalSearchEngines = "GlobalSearchEngines";
 
     static inline QString bookmarkFilePath()
     {

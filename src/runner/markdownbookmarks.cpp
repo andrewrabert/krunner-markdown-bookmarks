@@ -64,6 +64,22 @@ void MarkdownBookmarks::reloadConfiguration()
         }
     }
 
+    // Resolve global search engine keywords to indices
+    globalSearchEngineIndices.clear();
+    const QString globalStr = grp.readEntry(Config::GlobalSearchEngines, QString());
+    if (!globalStr.isEmpty()) {
+        const QStringList parts = globalStr.split(',');
+        QSet<int> seen;
+        for (const QString &part : parts) {
+            const QString kw = part.trimmed().toLower();
+            const auto it = searchEngineKeywordIndex.constFind(kw);
+            if (it != searchEngineKeywordIndex.constEnd() && !seen.contains(it.value())) {
+                seen.insert(it.value());
+                globalSearchEngineIndices.append(it.value());
+            }
+        }
+    }
+
     // Update file watches for bookmark and search engine files
     const QString bookmarkPath = Config::bookmarkFilePath(grp);
     const QString searchEnginePath = Config::searchEnginesFilePath(grp);
@@ -122,6 +138,7 @@ void MarkdownBookmarks::match(KRunner::RunnerContext &context)
     QList<KRunner::QueryMatch> matches;
 
     // Bang detection for search engines
+    bool bangDetected = false;
     {
         const QStringList tokens = search.split(' ', Qt::SkipEmptyParts);
         for (int i = 0; i < tokens.size(); ++i) {
@@ -130,6 +147,7 @@ void MarkdownBookmarks::match(KRunner::RunnerContext &context)
                 const QString keyword = token.mid(1).toLower();
                 const auto it = searchEngineKeywordIndex.constFind(keyword);
                 if (it != searchEngineKeywordIndex.constEnd()) {
+                    bangDetected = true;
                     QStringList queryParts;
                     for (int j = 0; j < tokens.size(); ++j) {
                         if (j != i)
@@ -151,6 +169,15 @@ void MarkdownBookmarks::match(KRunner::RunnerContext &context)
             if (relevance == -1)
                 continue;
             matches.append(createQueryMatch(bookmark, relevance));
+        }
+
+        // Global search engines (skipped when bang detected)
+        if (!bangDetected) {
+            for (int i = 0; i < globalSearchEngineIndices.size(); ++i) {
+                const qreal relevance = 0.1 / (i + 1);
+                matches.append(
+                    createSearchEngineMatch(searchEngines[globalSearchEngineIndices[i]], search, relevance, KRunner::QueryMatch::CategoryRelevance::Low));
+            }
         }
     }
     context.addMatches(matches);
@@ -182,15 +209,18 @@ KRunner::QueryMatch MarkdownBookmarks::createQueryMatch(const Bookmark &bookmark
     return match;
 }
 
-KRunner::QueryMatch MarkdownBookmarks::createSearchEngineMatch(const SearchEngine &engine, const QString &searchQuery)
+KRunner::QueryMatch MarkdownBookmarks::createSearchEngineMatch(const SearchEngine &engine,
+                                                               const QString &searchQuery,
+                                                               const qreal relevance,
+                                                               const KRunner::QueryMatch::CategoryRelevance categoryRelevance)
 {
     KRunner::QueryMatch match(this);
     match.setText(engine.name);
     const QString url = engine.buildUrl(searchQuery);
     match.setSubtext(searchQuery);
     match.setData(QUrl(url));
-    match.setRelevance(0.9);
-    match.setCategoryRelevance(KRunner::QueryMatch::CategoryRelevance::High);
+    match.setRelevance(relevance);
+    match.setCategoryRelevance(categoryRelevance);
 
     const auto it = searchEngineFaviconsByUrl.constFind(engine.urlTemplate);
     if (it != searchEngineFaviconsByUrl.constEnd()) {
