@@ -28,13 +28,18 @@ public:
     FaviconCache searchEngineFaviconCache;
     QHash<QString, QIcon> searchEngineFaviconsByUrl;
 
+    KServiceAction m_privateAction;
+    QList<KRunner::Action> m_searchEngineActions;
+
     KRunner::QueryMatch createQueryMatch(const Bookmark &bookmark, qreal relevance);
     KRunner::QueryMatch createSearchEngineMatch(const SearchEngine &engine,
                                                 const QString &searchQuery,
                                                 qreal relevance = 0.9,
                                                 KRunner::QueryMatch::CategoryRelevance categoryRelevance = KRunner::QueryMatch::CategoryRelevance::High);
+    void configurePrivateBrowsingAction();
 
 public: // Plasma::AbstractRunner API
+    void init() override;
     void reloadConfiguration() override;
     void match(KRunner::RunnerContext &context) override;
     void run(const KRunner::RunnerContext &context, const KRunner::QueryMatch &match) override;

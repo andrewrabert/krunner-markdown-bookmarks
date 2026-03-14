@@ -3,14 +3,19 @@
 #include "core/FileReader.h"
 #include "core/SearchEngineReader.h"
 
+#include <KApplicationTrader>
 #include <KConfigGroup>
+#include <KIO/CommandLauncherJob>
 #include <KIO/OpenUrlJob>
 #include <KSharedConfig>
+#include <KShell>
+#include <KSycoca>
 
 #include <QDBusConnection>
 #include <QDBusInterface>
 #include <QDBusReply>
 #include <QFile>
+#include <QIcon>
 #include <QLoggingCategory>
 #include <QUrl>
 
@@ -36,6 +41,7 @@ MarkdownBookmarks::MarkdownBookmarks(QObject *parent, const KPluginMetaData &plu
     connect(&searchEngineFaviconCache, &FaviconCache::iconsReady, this, [this](const QHash<QString, QIcon> &icons) {
         searchEngineFaviconsByUrl = icons;
     });
+    connect(KSycoca::self(), &KSycoca::databaseChanged, this, &MarkdownBookmarks::configurePrivateBrowsingAction);
 
     QList<KRunner::RunnerSyntax> syntaxes;
     syntaxes.append(KRunner::RunnerSyntax(QStringLiteral("bookmark :q:"), QStringLiteral("Searches for Markdown bookmarks matching the query.")));
@@ -46,6 +52,35 @@ MarkdownBookmarks::MarkdownBookmarks(QObject *parent, const KPluginMetaData &plu
 MarkdownBookmarks::~MarkdownBookmarks()
 {
     delete watcher;
+}
+
+void MarkdownBookmarks::init()
+{
+    configurePrivateBrowsingAction();
+    reloadConfiguration();
+}
+
+void MarkdownBookmarks::configurePrivateBrowsingAction()
+{
+    m_searchEngineActions.clear();
+    m_privateAction = KServiceAction();
+
+    KService::Ptr service = KApplicationTrader::preferredService(QStringLiteral("x-scheme-handler/http"));
+    if (!service) {
+        return;
+    }
+    const auto actions = service->actions();
+    for (const auto &action : actions) {
+        const bool containsPrivate = action.text().contains(QLatin1String("private"), Qt::CaseInsensitive);
+        const bool containsIncognito = action.text().contains(QLatin1String("incognito"), Qt::CaseInsensitive);
+        if (containsPrivate || containsIncognito) {
+            m_privateAction = action;
+            const QString iconName = QIcon::fromTheme(QStringLiteral("view-private"), QIcon::fromTheme(QStringLiteral("view-hidden"))).name();
+            const QString text = containsPrivate ? QStringLiteral("Search in private window") : QStringLiteral("Search in incognito window");
+            m_searchEngineActions = {KRunner::Action(action.exec(), iconName, text)};
+            return;
+        }
+    }
 }
 
 void MarkdownBookmarks::reloadConfiguration()
@@ -186,8 +221,24 @@ void MarkdownBookmarks::match(KRunner::RunnerContext &context)
 void MarkdownBookmarks::run(const KRunner::RunnerContext & /*context*/, const KRunner::QueryMatch &match)
 {
     QUrl location = match.data().toUrl();
-    if (!location.isEmpty()) {
-        auto job = new KIO::OpenUrlJob(location);
+    if (location.isEmpty()) {
+        return;
+    }
+
+    if (match.selectedAction()) {
+        const QString privateExec = m_privateAction.exec();
+        QString command;
+        if (privateExec.contains(QLatin1String("%u")) || privateExec.contains(QLatin1String("%U"))) {
+            command = privateExec;
+            command.replace(QLatin1String("%u"), KShell::quoteArg(location.toString()));
+            command.replace(QLatin1String("%U"), KShell::quoteArg(location.toString()));
+        } else {
+            command = privateExec + QLatin1Char(' ') + KShell::quoteArg(location.toString());
+        }
+        auto *job = new KIO::CommandLauncherJob(command);
+        job->start();
+    } else {
+        auto *job = new KIO::OpenUrlJob(location);
         job->start();
     }
 }
@@ -221,6 +272,10 @@ KRunner::QueryMatch MarkdownBookmarks::createSearchEngineMatch(const SearchEngin
     match.setData(QUrl(url));
     match.setRelevance(relevance);
     match.setCategoryRelevance(categoryRelevance);
+
+    if (!m_searchEngineActions.isEmpty()) {
+        match.setActions(m_searchEngineActions);
+    }
 
     const auto it = searchEngineFaviconsByUrl.constFind(engine.urlTemplate);
     if (it != searchEngineFaviconsByUrl.constEnd()) {
