@@ -174,21 +174,22 @@ void MarkdownBookmarks::match(KRunner::RunnerContext &context)
 
     // Bang detection for search engines — each matched bang strips only itself
     QSet<int> bangMatchedEngines;
-    {
-        const QStringList tokens = search.split(' ', Qt::SkipEmptyParts);
-        for (int i = 0; i < tokens.size(); ++i) {
-            const QString &token = tokens[i];
-            if (!token.startsWith('!') || token.size() <= 1)
-                continue;
-            const QString keyword = token.mid(1).toLower();
-            const auto it = searchEngineKeywordIndex.constFind(keyword);
-            if (it == searchEngineKeywordIndex.constEnd() || bangMatchedEngines.contains(it.value()))
-                continue;
-            bangMatchedEngines.insert(it.value());
-            QStringList queryTokens = tokens;
-            queryTokens.removeAt(i);
-            matches.append(createSearchEngineMatch(searchEngines[it.value()], queryTokens.join(' ')));
-        }
+    const QStringList tokens = search.split(' ', Qt::SkipEmptyParts);
+    int bangPosition = 0;
+    for (int i = 0; i < tokens.size(); ++i) {
+        const QString &token = tokens[i];
+        if (!token.startsWith('!') || token.size() <= 1)
+            continue;
+        const QString keyword = token.mid(1).toLower();
+        const auto it = searchEngineKeywordIndex.constFind(keyword);
+        if (it == searchEngineKeywordIndex.constEnd() || bangMatchedEngines.contains(it.value()))
+            continue;
+        bangMatchedEngines.insert(it.value());
+        QStringList queryTokens = tokens;
+        queryTokens.removeAt(i);
+        const qreal relevance = 0.9 / (bangPosition + 1);
+        matches.append(createSearchEngineMatch(searchEngines[it.value()], queryTokens.join(' '), relevance));
+        ++bangPosition;
     }
 
     // Bookmark matching
@@ -202,13 +203,9 @@ void MarkdownBookmarks::match(KRunner::RunnerContext &context)
         }
 
         // Global search engines always appear (skip if already matched by bang)
-        int position = 0;
         for (const int engineIndex : std::as_const(globalSearchEngineIndices)) {
-            if (!bangMatchedEngines.contains(engineIndex)) {
-                const qreal relevance = 0.1 / (position + 1);
-                matches.append(createSearchEngineMatch(searchEngines[engineIndex], search, relevance, KRunner::QueryMatch::CategoryRelevance::Low));
-            }
-            ++position;
+            if (!bangMatchedEngines.contains(engineIndex))
+                matches.append(createSearchEngineMatch(searchEngines[engineIndex], search, 0, KRunner::QueryMatch::CategoryRelevance::Low));
         }
     }
     context.addMatches(matches);
